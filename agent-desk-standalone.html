@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent Desk — Policy &amp; Client Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-ui: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Fraunces', Georgia, serif;
+
+    --bg: #EFEDE6;
+    --surface: #FFFFFF;
+    --surface-2: #F7F5EF;
+    --ink: #191A16;
+    --ink-soft: #5F6058;
+    --ink-faint: #91928A;
+    --border: #DEDCD2;
+    --border-strong: #C7C4B6;
+
+    --navy: #1B2A3D;
+    --navy-soft: #2C4258;
+    --gold: #A6762E;
+    --gold-soft: #C79A54;
+
+    --urgent: #A8402A;
+    --urgent-bg: #FBEAE4;
+    --soon: #B4791A;
+    --soon-bg: #FBF0DD;
+    --safe: #37714E;
+    --safe-bg: #E9F2EA;
+
+    --shadow-1: 0 1px 2px rgba(25,26,22,0.06), 0 1px 1px rgba(25,26,22,0.04);
+    --shadow-2: 0 8px 24px rgba(25,26,22,0.10), 0 2px 8px rgba(25,26,22,0.06);
+
+    --radius-s: 6px;
+    --radius-m: 10px;
+    --radius-l: 16px;
+
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161A;
+      --surface: #1C1F25;
+      --surface-2: #22262D;
+      --ink: #EDECE6;
+      --ink-soft: #ABACA4;
+      --ink-faint: #71726A;
+      --border: #31353D;
+      --border-strong: #40454F;
+      --navy: #6E8CB0;
+      --navy-soft: #8FA9C6;
+      --gold: #D3A75C;
+      --gold-soft: #E0BC80;
+      --urgent: #E38066;
+      --urgent-bg: #3A241F;
+      --soon: #E0B15C;
+      --soon-bg: #3B2F1A;
+      --safe: #7FBE96;
+      --safe-bg: #1D3226;
+      --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+      --shadow-2: 0 8px 24px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161A;
+    --surface: #1C1F25;
+    --surface-2: #22262D;
+    --ink: #EDECE6;
+    --ink-soft: #ABACA4;
+    --ink-faint: #71726A;
+    --border: #31353D;
+    --border-strong: #40454F;
+    --navy: #6E8CB0;
+    --navy-soft: #8FA9C6;
+    --gold: #D3A75C;
+    --gold-soft: #E0BC80;
+    --urgent: #E38066;
+    --urgent-bg: #3A241F;
+    --soon: #E0B15C;
+    --soon-bg: #3B2F1A;
+    --safe: #7FBE96;
+    --safe-bg: #1D3226;
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-2: 0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 14.5px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; color: var(--ink); }
+  button { font-family: inherit; }
+  ::selection { background: var(--gold-soft); color: #1a1a1a; }
+  a { color: var(--navy-soft); }
+
+  /* ---------- App shell ---------- */
+  #app { display: flex; min-height: 100vh; min-height: 100dvh; }
+
+  .sidebar {
+    width: 228px;
+    flex-shrink: 0;
+    background: var(--navy);
+    color: #EEF1F5;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 8px 22px 8px;
+  }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(155deg, var(--gold-soft), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .brand-text { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.15; color: #fff; }
+  .brand-text small { display: block; font-family: var(--font-ui); font-size: 10.5px; font-weight: 500; color: #A9B6C6; letter-spacing: 0.02em; margin-top: 2px; }
+
+  .nav-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 12px; border-radius: var(--radius-s);
+    color: #C4CEDA; cursor: pointer; font-size: 13.6px; font-weight: 500;
+    border: none; background: none; width: 100%; text-align: left;
+    transition: background .12s ease, color .12s ease;
+  }
+  .nav-item .ic { font-size: 15px; width: 18px; text-align: center; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .nav-item .badge {
+    margin-left: auto; background: var(--urgent); color: #fff; font-size: 10.5px;
+    font-weight: 700; padding: 1px 6px; border-radius: 20px; min-width: 16px; text-align: center;
+  }
+  .sidebar-foot { margin-top: auto; padding: 10px 8px 2px; font-size: 11px; color: #7C8CA0; }
+  .sidebar-foot .sync-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#5FBF87; margin-right:5px; }
+  .sidebar-foot .sync-dot.off { background:#C7813E; }
+
+  main {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 30px 60px;
+    max-width: 1180px;
+  }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .page-head h1 { font-size: 24px; }
+  .page-sub { color: var(--ink-soft); font-size: 13.5px; margin-top: 3px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 15px; border-radius: var(--radius-s);
+    font-size: 13.4px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink);
+    transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { box-shadow: var(--shadow-1); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-soft); }
+  .btn-gold { background: var(--gold); border-color: var(--gold); color: #fff; }
+  .btn-ghost { background: none; border-color: transparent; color: var(--ink-soft); }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+  .btn-danger { background: none; border-color: var(--border-strong); color: var(--urgent); }
+  .btn-danger:hover { background: var(--urgent-bg); }
+  .btn-sm { padding: 6px 11px; font-size: 12.4px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  /* ---------- Cards / grid ---------- */
+  .grid-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m);
+    padding: 16px 17px; box-shadow: var(--shadow-1);
+  }
+  .stat-card .label { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+  .stat-card .value { font-family: var(--font-display); font-size: 27px; margin-top: 6px; }
+  .stat-card .sub { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; }
+  .stat-card.accent-urgent .value { color: var(--urgent); }
+  .stat-card.accent-gold .value { color: var(--gold); }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m);
+    box-shadow: var(--shadow-1); overflow: hidden;
+  }
+  .panel + .panel { margin-top: 16px; }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+  }
+  .panel-head h3 { font-size: 15.5px; }
+  .panel-body { padding: 4px 0; }
+  .panel-body.pad { padding: 16px 18px; }
+
+  /* ---------- Reminder rows ---------- */
+  .rlist { list-style:none; margin:0; padding:0; }
+  .rrow {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .rrow:last-child { border-bottom: none; }
+  .rrow:hover { background: var(--surface-2); }
+  .urgency-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .urgency-dot.urgent { background: var(--urgent); }
+  .urgency-dot.soon { background: var(--soon); }
+  .urgency-dot.safe { background: var(--safe); }
+  .rrow .main { flex: 1; min-width: 0; }
+  .rrow .name { font-weight: 600; font-size: 13.6px; }
+  .rrow .meta { font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+  .rrow .right { text-align: right; flex-shrink: 0; }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  }
+  .pill.urgent { background: var(--urgent-bg); color: var(--urgent); }
+  .pill.soon { background: var(--soon-bg); color: var(--soon); }
+  .pill.safe { background: var(--safe-bg); color: var(--safe); }
+  .empty-state { padding: 34px 18px; text-align:center; color: var(--ink-faint); font-size: 13px; }
+  .empty-state .ic { font-size: 26px; display:block; margin-bottom: 8px; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 13.3px; }
+  thead th {
+    text-align: left; font-size: 11px; text-transform: none; color: var(--ink-soft);
+    font-weight: 600; padding: 10px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2);
+  }
+  tbody td { padding: 11px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover { background: var(--surface-2); }
+  .company-chip {
+    display: inline-flex; align-items:center; gap:6px; font-size: 12px; font-weight: 700; padding: 3px 9px 3px 7px; border-radius: 20px;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .company-chip .dot { width:7px; height:7px; border-radius:50%; }
+  .muted { color: var(--ink-soft); }
+  .tbl-toolbar { display:flex; gap:10px; align-items:center; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap:wrap; }
+  .search-input {
+    flex: 1; min-width: 160px; padding: 8px 12px; border-radius: var(--radius-s);
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); font-size: 13px;
+  }
+  select.filter, .search-input { font-family: inherit; }
+  select.filter {
+    padding: 8px 10px; border-radius: var(--radius-s); border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--ink); font-size: 12.8px;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(20,20,16,0.45); backdrop-filter: blur(1px);
+    display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+  }
+  .modal {
+    background: var(--surface); border-radius: var(--radius-l); width: 100%; max-width: 460px;
+    max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-2); border: 1px solid var(--border);
+  }
+  .modal.wide { max-width: 640px; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; padding: 18px 22px 8px; }
+  .modal-head h3 { font-size: 17px; }
+  .modal-body { padding: 10px 22px 22px; }
+  .modal-foot { display:flex; justify-content:flex-end; gap: 10px; padding: 14px 22px 20px; }
+  .field { margin-bottom: 13px; }
+  .field label { display:block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 11px; border-radius: var(--radius-s); border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--ink); font-size: 13.6px; font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 56px; }
+  .field-row { display:flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .close-x { border:none; background:none; font-size: 18px; color: var(--ink-faint); cursor:pointer; line-height:1; padding: 4px; }
+
+  /* ---------- Client detail ---------- */
+  .back-link { display:inline-flex; align-items:center; gap:6px; font-size: 12.8px; color: var(--ink-soft); background:none; border:none; cursor:pointer; padding: 0 0 10px; font-weight:600; }
+  .back-link:hover { color: var(--ink); }
+  .client-header { display:flex; align-items:flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .client-avatar { width: 46px; height:46px; border-radius:12px; background: var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-size:18px; font-weight:600; }
+  .client-title-row { display:flex; gap: 13px; align-items:center; }
+  .client-title-row h1 { font-size: 21px; }
+  .client-contact { font-size: 12.6px; color: var(--ink-soft); margin-top: 3px; }
+
+  .policy-card {
+    border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px 16px; background: var(--surface);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .policy-card + .policy-card { margin-top: 10px; }
+  .policy-top { display:flex; align-items:flex-start; justify-content:space-between; gap: 10px; }
+  .policy-cover { font-weight: 700; font-size: 14.5px; }
+  .policy-meta { font-size: 12px; color: var(--ink-soft); }
+  .policy-figures { display:flex; gap: 20px; margin-top: 2px; flex-wrap:wrap; }
+  .fig .k { font-size: 10.5px; color: var(--ink-faint); font-weight:600; }
+  .fig .v { font-size: 14px; font-weight: 700; margin-top: 1px; }
+  .policy-actions { display:flex; gap:8px; margin-top: 4px; }
+
+  .statement-block { padding: 6px 0 0; }
+  .statement-client-select { max-width: 320px; margin-bottom: 16px; }
+  #print-area { display: none; }
+  @media print {
+    .sidebar, .page-head .btn, .no-print { display: none !important; }
+    #app { display: block; }
+    main { max-width: 100%; padding: 0; }
+    #print-area { display: block; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; top: 0; left: 0; width: 100%; }
+  }
+
+  .toast {
+    position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 30px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow-2); z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  .bars { display:flex; align-items:flex-end; gap: 14px; height: 130px; padding: 10px 4px 0; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
+  .bar-col .bar { width: 100%; max-width: 34px; border-radius: 5px 5px 0 0; background: var(--navy); min-height: 3px; }
+  .bar-col .bcount { font-size: 11.5px; font-weight:700; }
+  .bar-col .blabel { font-size: 10.5px; color: var(--ink-soft); font-weight:600; text-align:center; }
+
+  /* ---------- Mobile ---------- */
+  .mobile-topbar { display: none; }
+  @media (max-width: 860px) {
+    .grid-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 680px) {
+    #app { flex-direction: column; }
+    .sidebar { display: none; }
+    .mobile-topbar {
+      display: flex; align-items:center; justify-content:space-between;
+      position: sticky; top: 0; z-index: 40;
+      background: var(--navy); color: #fff; padding: calc(12px + env(safe-area-inset-top,0px)) 16px 12px;
+    }
+    .mobile-topbar .brand-text { font-size: 15px; }
+    .mobile-topbar .brand-mark { width: 28px; height: 28px; font-size: 14px; }
+    main { padding: 16px 14px 90px; }
+    .grid-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px 13px; }
+    .stat-card .value { font-size: 21px; }
+    .bottom-tabbar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      background: var(--navy); display:flex; padding: 6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    }
+    .bottom-tabbar .nav-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 7px 2px; text-align:center; border-radius: 8px; }
+    .bottom-tabbar .nav-item .ic { font-size: 17px; width:auto; }
+    .bottom-tabbar .nav-item .badge { position:absolute; margin-top:-18px; margin-left: 14px; }
+    .page-head { align-items: flex-start; }
+    .tbl-toolbar { flex-direction: column; align-items: stretch; }
+    table, thead, tbody, tr, td, th { display: block; }
+    thead { display: none; }
+    tbody tr { border-bottom: 1px solid var(--border); padding: 10px 14px; }
+    tbody td { border: none; padding: 3px 0; }
+    tbody td[data-label]::before { content: attr(data-label); font-size: 10.5px; color: var(--ink-faint); font-weight:700; display:block; }
+    td.row-primary::before { content: none !important; font-weight: 700; font-size: 14px; }
+    .field-row { flex-direction: column; gap: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Desktop sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">🛡️</div>
+      <div class="brand-text">Agent Desk<small>Multi-insurer client book</small></div>
+    </div>
+    <ul class="nav-list" id="nav-list"></ul>
+    <div class="sidebar-foot">
+      <div id="sync-status"><span class="sync-dot"></span>Saved on this device</div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" id="export-btn" style="color:#C4CEDA; border-color:rgba(255,255,255,0.14); flex:1;">⭳ Export</button>
+        <button class="btn btn-ghost btn-sm" id="import-btn" style="color:#C4CEDA; border-color:rgba(255,255,255,0.14); flex:1;">⭱ Import</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" style="display:none;">
+    </div>
+  </nav>
+
+  <!-- Mobile topbar -->
+  <div class="mobile-topbar">
+    <div class="brand"><div class="brand-mark">🛡️</div><div class="brand-text">Agent Desk</div></div>
+    <div style="display:flex; gap:6px;">
+      <button id="export-btn-mobile" style="background:none;border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:6px;padding:5px 9px;font-size:11px;">Export</button>
+      <button id="import-btn-mobile" style="background:none;border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:6px;padding:5px 9px;font-size:11px;">Import</button>
+    </div>
+  </div>
+
+  <main id="main"></main>
+
+  <!-- Mobile bottom tabs -->
+  <nav class="bottom-tabbar" id="bottom-tabbar"></nav>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast" class="toast"></div>
+<div id="print-area"></div>
+
+<script>
+(function(){
+
+  /* ================= CONFIG ================= */
+  var COMPANIES = [
+    { id: 'cic', name: 'CIC Insurance', color: '#2E6B4F' },
+    { id: 'directline', name: 'Directline', color: '#2A5C8A' },
+    { id: 'monarch', name: 'Monarch Insurance', color: '#8A4B2A' },
+    { id: 'definite', name: 'Definite Insurance', color: '#6A3E8A' },
+    { id: 'britam', name: 'Britam', color: '#B3372A' }
+  ];
+  var COVER_TYPES = ['Motor Private','Motor Commercial','Medical','Life','WIBA / Personal Accident','Property / Fire','Travel','Marine','Other'];
+  var FREQUENCIES = ['Annual','Semi-Annual','Quarterly','Monthly','Single Premium'];
+
+  var NAV = [
+    { id: 'dashboard', label: 'Dashboard', ic: '◆' },
+    { id: 'reminders', label: 'Reminders', ic: '◔' },
+    { id: 'clients',   label: 'Clients',   ic: '◈' },
+    { id: 'policies',  label: 'Policies',  ic: '▤' },
+    { id: 'payments',  label: 'Payments',  ic: '◑' },
+    { id: 'statements',label: 'Statements',ic: '▦' }
+  ];
+
+  /* ================= STATE ================= */
+  var state = {
+    view: 'dashboard',
+    db: null,
+    dbReady: false,
+    clients: [],
+    policies: [],
+    payments: [],
+    activeClientId: null,
+    statementClientId: null,
+    clientSearch: '',
+    policySearch: '',
+    policyFilterCompany: '',
+    policyFilterStatus: ''
+  };
+
+  /* ================= HELPERS ================= */
+  function uid(){ return 'id' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+  function fmtKES(n){
+    n = Number(n)||0;
+    return 'KSh ' + n.toLocaleString('en-KE', {maximumFractionDigits: 0});
+  }
+  function fmtDate(d){
+    if(!d) return '—';
+    var dt = new Date(d + 'T00:00:00');
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    var today = new Date(todayStr()+'T00:00:00');
+    var target = new Date(dateStr+'T00:00:00');
+    return Math.round((target-today)/86400000);
+  }
+  function urgencyOf(days){
+    if (days === null) return 'safe';
+    if (days <= 7) return 'urgent';
+    if (days <= 30) return 'soon';
+    return 'safe';
+  }
+  function urgencyLabel(days){
+    if (days === null) return '—';
+    if (days < 0) return Math.abs(days) + 'd overdue';
+    if (days === 0) return 'Today';
+    return days + 'd left';
+  }
+  function companyOf(id){ return COMPANIES.find(function(c){return c.id===id;}) || {name:id||'—', color:'#999'}; }
+  function clientOf(id){ return state.clients.find(function(c){return c.id===id;}); }
+  function paymentsForPolicy(policyId){ return state.payments.filter(function(p){return p.policyId===policyId;}); }
+  function paidTotal(policyId){ return paymentsForPolicy(policyId).reduce(function(s,p){return s+(Number(p.amount)||0);},0); }
+  function balanceOf(policy){ return Math.max(0, (Number(policy.premium)||0) - paidTotal(policy.id)); }
+  function policiesForClient(clientId){ return state.policies.filter(function(p){return p.clientId===clientId;}); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function initials(name){
+    if(!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  /* =================================================================
+     STORAGE LAYER — localStorage, per browser/device.
+     This file has no server, so data saved here stays on THIS device
+     in THIS browser only. To move data between devices (phone, laptop,
+     a new browser), use the Export button to download a .json backup,
+     then Import it on the other device. Export regularly as a backup —
+     clearing browser data / site data will erase everything.
+     If you later add a small backend (Firebase, Supabase, a simple
+     REST API, etc.), swap the storeGet/storeSet functions below —
+     nothing else in the app needs to change.
+     ================================================================= */
+  var STORAGE_PREFIX = 'agentdesk_';
+
+  function storeGet(col){
+    try {
+      var raw = localStorage.getItem(STORAGE_PREFIX + col);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ console.error('Read failed for', col, e); return []; }
+  }
+  function storeSet(col, arr){
+    try {
+      localStorage.setItem(STORAGE_PREFIX + col, JSON.stringify(arr));
+      return true;
+    } catch(e){
+      console.error('Write failed for', col, e);
+      showToast('Could not save — storage may be full.');
+      return false;
+    }
+  }
+
+  function loadAll(){
+    state.clients = storeGet('clients');
+    state.policies = storeGet('policies');
+    state.payments = storeGet('payments');
+  }
+
+  function initDb(){
+    loadAll();
+    setSyncStatus(true, 'Saved on this device');
+    render();
+  }
+
+  function setSyncStatus(ok, label){
+    var el = document.getElementById('sync-status');
+    if (el) el.innerHTML = '<span class="sync-dot' + (ok?'':' off') + '"></span>' + esc(label);
+  }
+
+  async function dbAdd(col, data){
+    var arr = storeGet(col);
+    data.id = uid();
+    data.createdAt = Date.now();
+    arr.push(data);
+    if (!storeSet(col, arr)) return null;
+    state[col] = arr;
+    return data.id;
+  }
+  async function dbUpdate(col, id, data){
+    var arr = storeGet(col);
+    var idx = arr.findIndex(function(x){ return x.id === id; });
+    if (idx === -1) return;
+    arr[idx] = Object.assign({}, arr[idx], data);
+    if (!storeSet(col, arr)) return;
+    state[col] = arr;
+  }
+  async function dbDelete(col, id){
+    var arr = storeGet(col).filter(function(x){ return x.id !== id; });
+    if (!storeSet(col, arr)) return;
+    state[col] = arr;
+  }
+
+  function exportData(){
+    var payload = {
+      exportedAt: new Date().toISOString(),
+      clients: state.clients,
+      policies: state.policies,
+      payments: state.payments
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var stamp = todayStr();
+    a.href = url;
+    a.download = 'agent-desk-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded');
+  }
+
+  function importData(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var payload = JSON.parse(reader.result);
+        if (!payload || !Array.isArray(payload.clients)) throw new Error('Not a valid backup file');
+        var mode = confirm(
+          'Import ' + payload.clients.length + ' client(s), ' + (payload.policies||[]).length + ' polic' + ((payload.policies||[]).length===1?'y':'ies') + ' and ' + (payload.payments||[]).length + ' payment(s).\n\n' +
+          'OK = REPLACE all current data on this device with the backup.\n' +
+          'Cancel = MERGE the backup into what is already here.'
+        );
+        if (mode) {
+          storeSet('clients', payload.clients || []);
+          storeSet('policies', payload.policies || []);
+          storeSet('payments', payload.payments || []);
+        } else {
+          mergeIn('clients', payload.clients || []);
+          mergeIn('policies', payload.policies || []);
+          mergeIn('payments', payload.payments || []);
+        }
+        loadAll();
+        showToast('Import complete');
+        render();
+      } catch(e){
+        console.error(e);
+        showToast('That file could not be read as an Agent Desk backup.');
+      }
+    };
+    reader.readAsText(file);
+  }
+  function mergeIn(col, incoming){
+    var existing = storeGet(col);
+    var byId = {};
+    existing.forEach(function(x){ byId[x.id] = x; });
+    incoming.forEach(function(x){ byId[x.id] = x; });
+    storeSet(col, Object.keys(byId).map(function(k){ return byId[k]; }));
+  }
+
+  /* ================= NAV RENDER ================= */
+  function expiringCount(){
+    return state.policies.filter(function(p){
+      var d = daysUntil(p.expiryDate);
+      return d !== null && d <= 30;
+    }).length;
+  }
+  function outstandingCount(){
+    return state.policies.filter(function(p){ return balanceOf(p) > 0; }).length;
+  }
+
+  function renderNav(){
+    var remCount = expiringCount() + outstandingCount();
+    function itemHtml(n, forBottom){
+      var badge = (n.id === 'reminders' && remCount > 0) ? '<span class="badge">'+remCount+'</span>' : '';
+      return '<button class="nav-item'+(state.view===n.id?' active':'')+'" data-nav="'+n.id+'">' +
+        '<span class="ic">'+n.ic+'</span><span>'+n.label+'</span>'+badge+'</button>';
+    }
+    document.getElementById('nav-list').innerHTML = NAV.map(function(n){ return '<li>'+itemHtml(n)+'</li>'; }).join('');
+    document.getElementById('bottom-tabbar').innerHTML = NAV.map(function(n){ return itemHtml(n); }).join('');
+  }
+
+  /* ================= VIEWS ================= */
+
+  function renderDashboard(){
+    var totalClients = state.clients.length;
+    var totalPolicies = state.policies.length;
+    var expSoon = expiringCount();
+    var totalOutstanding = state.policies.reduce(function(s,p){ return s + balanceOf(p); }, 0);
+
+    var byCompany = {};
+    COMPANIES.forEach(function(c){ byCompany[c.id] = 0; });
+    state.policies.forEach(function(p){ if (byCompany[p.company]!==undefined) byCompany[p.company]++; });
+    var maxCount = Math.max(1, Math.max.apply(null, Object.keys(byCompany).map(function(k){return byCompany[k];})));
+
+    var reminders = buildReminderItems().slice(0,5);
+
+    var html = '';
+    html += pageHead('Dashboard', 'Your book of business, at a glance.', '');
+    html += '<div class="grid-cards">' +
+      statCard('Total clients', totalClients, 'across all insurers') +
+      statCard('Active policies', totalPolicies, 'all companies') +
+      statCard('Expiring ≤ 30 days', expSoon, 'renewals to chase', expSoon>0?'accent-urgent':'') +
+      statCard('Outstanding balance', fmtKES(totalOutstanding), 'across all clients', totalOutstanding>0?'accent-gold':'') +
+    '</div>';
+
+    html += '<div style="display:grid; grid-template-columns: 1.3fr 1fr; gap:16px;" class="dash-grid">';
+    html += '<div class="panel"><div class="panel-head"><h3>Upcoming reminders</h3><button class="btn btn-ghost btn-sm" data-nav="reminders">View all →</button></div><div class="panel-body">' +
+      renderReminderList(reminders) + '</div></div>';
+
+    html += '<div class="panel"><div class="panel-head"><h3>Policies by insurer</h3></div><div class="panel-body pad">' +
+      '<div class="bars">' + COMPANIES.map(function(c){
+        var h = Math.round((byCompany[c.id]/maxCount)*100);
+        return '<div class="bar-col"><div class="bcount">'+byCompany[c.id]+'</div><div class="bar" style="height:'+Math.max(h,4)+'%; background:'+c.color+'"></div><div class="blabel">'+c.name.split(' ')[0]+'</div></div>';
+      }).join('') + '</div>' +
+    '</div></div>';
+    html += '</div>';
+
+    document.getElementById('main').innerHTML = html;
+    injectDashGridResponsive();
+  }
+
+  function injectDashGridResponsive(){
+    if (window.innerWidth <= 900) {
+      var g = document.querySelector('.dash-grid');
+      if (g) g.style.gridTemplateColumns = '1fr';
+    }
+  }
+
+  function statCard(label, value, sub, accentClass){
+    return '<div class="stat-card '+(accentClass||'')+'"><div class="label">'+esc(label)+'</div><div class="value">'+value+'</div><div class="sub">'+esc(sub)+'</div></div>';
+  }
+
+  function pageHead(title, sub, actionsHtml){
+    return '<div class="page-head"><div><h1>'+esc(title)+'</h1><div class="page-sub">'+esc(sub)+'</div></div><div style="display:flex;gap:8px;">'+(actionsHtml||'')+'</div></div>';
+  }
+
+  function buildReminderItems(){
+    var items = [];
+    state.policies.forEach(function(p){
+      var d = daysUntil(p.expiryDate);
+      var c = clientOf(p.clientId);
+      if (d !== null && d <= 30) {
+        items.push({
+          type: 'expiry', days: d, sortKey: d,
+          clientName: c ? c.name : 'Unknown client',
+          clientId: p.clientId, policyId: p.id,
+          text: companyOf(p.company).name + ' · ' + (p.coverType||'Cover') + ' · ' + (p.policyNumber||'no number'),
+        });
+      }
+      var bal = balanceOf(p);
+      if (bal > 0) {
+        items.push({
+          type: 'payment', days: d, sortKey: (d===null? 9999 : d),
+          clientName: c ? c.name : 'Unknown client',
+          clientId: p.clientId, policyId: p.id,
+          text: companyOf(p.company).name + ' · Balance ' + fmtKES(bal),
+        });
+      }
+    });
+    items.sort(function(a,b){ return a.sortKey - b.sortKey; });
+    return items;
+  }
+
+  function renderReminderList(items){
+    if (!items.length) return '<div class="empty-state"><span class="ic">✓</span>All caught up — no renewals or balances due soon.</div>';
+    return '<ul class="rlist">' + items.map(function(it){
+      var u = it.type==='expiry' ? urgencyOf(it.days) : (it.sortKey<=7?'urgent':it.sortKey<=30?'soon':'safe');
+      var right = it.type==='expiry'
+        ? '<span class="pill '+u+'">'+urgencyLabel(it.days)+'</span>'
+        : '<span class="pill soon">Balance due</span>';
+      var icon = it.type==='expiry' ? '⏰' : '💰';
+      return '<li class="rrow" data-open-client="'+it.clientId+'">' +
+        '<span class="urgency-dot '+u+'"></span>' +
+        '<div class="main"><div class="name">'+icon+' '+esc(it.clientName)+'</div><div class="meta">'+esc(it.text)+'</div></div>' +
+        '<div class="right">'+right+'</div></li>';
+    }).join('') + '</ul>';
+  }
+
+  function renderReminders(){
+    var items = buildReminderItems();
+    var expiry = items.filter(function(i){return i.type==='expiry';});
+    var payment = items.filter(function(i){return i.type==='payment';});
+    var html = pageHead('Reminders', 'Policies expiring soon and balances outstanding, most urgent first.', '');
+    html += '<div class="panel"><div class="panel-head"><h3>⏰ Expiring policies (≤ 30 days)</h3></div><div class="panel-body">' + renderReminderList(expiry) + '</div></div>';
+    html += '<div class="panel"><div class="panel-head"><h3>💰 Outstanding balances</h3></div><div class="panel-body">' + renderReminderList(payment) + '</div></div>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderClients(){
+    var q = state.clientSearch.toLowerCase();
+    var list = state.clients.filter(function(c){
+      return !q || (c.name||'').toLowerCase().indexOf(q)>-1 || (c.phone||'').toLowerCase().indexOf(q)>-1 || (c.idNumber||'').toLowerCase().indexOf(q)>-1;
+    }).sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+
+    var html = pageHead('Clients', state.clients.length + ' client' + (state.clients.length===1?'':'s') + ' in your book.',
+      '<button class="btn btn-primary" data-action="new-client">+ Add client</button>');
+
+    html += '<div class="panel">';
+    html += '<div class="tbl-toolbar"><input class="search-input" id="client-search" placeholder="Search by name, phone or ID number…" value="'+esc(state.clientSearch)+'"></div>';
+
+    if (!list.length) {
+      html += '<div class="empty-state"><span class="ic">◈</span>' + (state.clients.length? 'No clients match your search.' : 'No clients yet. Add your first client to get started.') + '</div>';
+    } else {
+      html += '<table><thead><tr><th>Client</th><th>Phone</th><th>Policies</th><th>Outstanding</th><th>Nearest expiry</th></tr></thead><tbody>';
+      list.forEach(function(c){
+        var pols = policiesForClient(c.id);
+        var bal = pols.reduce(function(s,p){return s+balanceOf(p);},0);
+        var nearest = pols.reduce(function(min,p){ var d=daysUntil(p.expiryDate); if(d===null) return min; return (min===null||d<min)?d:min; }, null);
+        html += '<tr class="clickable" data-open-client="'+c.id+'">' +
+          '<td class="row-primary" data-label="Client"><strong>'+esc(c.name)+'</strong></td>' +
+          '<td data-label="Phone">'+esc(c.phone||'—')+'</td>' +
+          '<td data-label="Policies">'+pols.length+'</td>' +
+          '<td data-label="Outstanding">'+(bal>0?'<span style="color:var(--gold);font-weight:700;">'+fmtKES(bal)+'</span>':'<span class="muted">'+fmtKES(0)+'</span>')+'</td>' +
+          '<td data-label="Nearest expiry">'+(nearest===null? '<span class="muted">—</span>' : '<span class="pill '+urgencyOf(nearest)+'">'+urgencyLabel(nearest)+'</span>')+'</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderClientDetail(clientId){
+    var c = clientOf(clientId);
+    if (!c) { state.view='clients'; return renderClients(); }
+    var pols = policiesForClient(clientId).sort(function(a,b){ return (daysUntil(a.expiryDate)||9999) - (daysUntil(b.expiryDate)||9999); });
+
+    var html = '<button class="back-link" data-nav="clients">← Back to clients</button>';
+    html += '<div class="client-header"><div class="client-title-row">' +
+      '<div class="client-avatar">'+initials(c.name)+'</div>' +
+      '<div><h1>'+esc(c.name)+'</h1><div class="client-contact">'+esc(c.phone||'—')+(c.email? ' · '+esc(c.email):'')+(c.idNumber? ' · ID '+esc(c.idNumber):'')+'</div></div>' +
+    '</div><div style="display:flex; gap:8px;">' +
+      '<button class="btn" data-action="edit-client" data-id="'+c.id+'">Edit</button>' +
+      '<button class="btn btn-primary" data-action="new-policy" data-client="'+c.id+'">+ Add policy</button>' +
+    '</div></div>';
+
+    if (c.address) html += '<div class="page-sub" style="margin:-10px 0 16px;">'+esc(c.address)+'</div>';
+
+    if (!pols.length) {
+      html += '<div class="panel"><div class="empty-state"><span class="ic">▤</span>No policies yet for this client.</div></div>';
+    } else {
+      pols.forEach(function(p){
+        var d = daysUntil(p.expiryDate);
+        var bal = balanceOf(p);
+        var comp = companyOf(p.company);
+        html += '<div class="policy-card">' +
+          '<div class="policy-top"><div>' +
+            '<span class="company-chip"><span class="dot" style="background:'+comp.color+'"></span>'+esc(comp.name)+'</span> ' +
+            '<div class="policy-cover" style="margin-top:6px;">'+esc(p.coverType||'Cover')+'</div>' +
+            '<div class="policy-meta">Policy No. '+esc(p.policyNumber||'—')+' · '+esc(p.paymentFrequency||'—')+'</div>' +
+          '</div><span class="pill '+urgencyOf(d)+'">'+urgencyLabel(d)+'</span></div>' +
+          '<div class="policy-figures">' +
+            '<div class="fig"><div class="k">PREMIUM</div><div class="v">'+fmtKES(p.premium)+'</div></div>' +
+            '<div class="fig"><div class="k">PAID</div><div class="v">'+fmtKES(paidTotal(p.id))+'</div></div>' +
+            '<div class="fig"><div class="k">BALANCE</div><div class="v" style="color:'+(bal>0?'var(--gold)':'var(--safe)')+'">'+fmtKES(bal)+'</div></div>' +
+            '<div class="fig"><div class="k">EXPIRES</div><div class="v" style="font-size:13px;">'+fmtDate(p.expiryDate)+'</div></div>' +
+          '</div>' +
+          (p.notes ? '<div class="policy-meta">'+esc(p.notes)+'</div>' : '') +
+          '<div class="policy-actions">' +
+            '<button class="btn btn-sm btn-gold" data-action="new-payment" data-policy="'+p.id+'">+ Record payment</button>' +
+            '<button class="btn btn-sm" data-action="edit-policy" data-id="'+p.id+'">Edit</button>' +
+            '<button class="btn btn-sm btn-danger" data-action="delete-policy" data-id="'+p.id+'">Delete</button>' +
+          '</div>' +
+        '</div>';
+      });
+    }
+
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderPolicies(){
+    var q = state.policySearch.toLowerCase();
+    var list = state.policies.filter(function(p){
+      var c = clientOf(p.clientId);
+      var matchQ = !q || (p.policyNumber||'').toLowerCase().indexOf(q)>-1 || (c && (c.name||'').toLowerCase().indexOf(q)>-1);
+      var matchCompany = !state.policyFilterCompany || p.company === state.policyFilterCompany;
+      var d = daysUntil(p.expiryDate);
+      var status = balanceOf(p) > 0 ? 'unpaid' : (d!==null && d<=30 ? 'expiring' : 'ok');
+      var matchStatus = !state.policyFilterStatus || state.policyFilterStatus === status;
+      return matchQ && matchCompany && matchStatus;
+    }).sort(function(a,b){ return (daysUntil(a.expiryDate)||9999) - (daysUntil(b.expiryDate)||9999); });
+
+    var html = pageHead('Policies', state.policies.length + ' polic' + (state.policies.length===1?'y':'ies') + ' across all insurers.',
+      '<button class="btn btn-primary" data-action="new-policy">+ Add policy</button>');
+
+    html += '<div class="panel"><div class="tbl-toolbar">' +
+      '<input class="search-input" id="policy-search" placeholder="Search policy number or client…" value="'+esc(state.policySearch)+'">' +
+      '<select class="filter" id="policy-filter-company"><option value="">All insurers</option>' + COMPANIES.map(function(c){ return '<option value="'+c.id+'"'+(state.policyFilterCompany===c.id?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('') + '</select>' +
+      '<select class="filter" id="policy-filter-status"><option value="">All statuses</option><option value="unpaid"'+(state.policyFilterStatus==='unpaid'?' selected':'')+'>Balance due</option><option value="expiring"'+(state.policyFilterStatus==='expiring'?' selected':'')+'>Expiring ≤30d</option><option value="ok"'+(state.policyFilterStatus==='ok'?' selected':'')+'>In good standing</option></select>' +
+    '</div>';
+
+    if (!list.length) {
+      html += '<div class="empty-state"><span class="ic">▤</span>No policies match.</div>';
+    } else {
+      html += '<table><thead><tr><th>Client</th><th>Insurer</th><th>Cover</th><th>Expiry</th><th>Balance</th></tr></thead><tbody>';
+      list.forEach(function(p){
+        var c = clientOf(p.clientId);
+        var d = daysUntil(p.expiryDate);
+        var comp = companyOf(p.company);
+        var bal = balanceOf(p);
+        html += '<tr class="clickable" data-open-client="'+p.clientId+'">' +
+          '<td class="row-primary" data-label="Client"><strong>'+esc(c?c.name:'—')+'</strong></td>' +
+          '<td data-label="Insurer"><span class="company-chip"><span class="dot" style="background:'+comp.color+'"></span>'+esc(comp.name)+'</span></td>' +
+          '<td data-label="Cover">'+esc(p.coverType||'—')+'<div class="muted" style="font-size:11px;">'+esc(p.policyNumber||'')+'</div></td>' +
+          '<td data-label="Expiry"><span class="pill '+urgencyOf(d)+'">'+urgencyLabel(d)+'</span><div class="muted" style="font-size:11px;margin-top:2px;">'+fmtDate(p.expiryDate)+'</div></td>' +
+          '<td data-label="Balance">'+(bal>0? '<strong style="color:var(--gold);">'+fmtKES(bal)+'</strong>' : '<span class="muted">Paid up</span>')+'</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderPayments(){
+    var rows = state.payments.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    var html = pageHead('Payments', 'Payment history across all clients and insurers.', '');
+    html += '<div class="panel">';
+    if (!rows.length) {
+      html += '<div class="empty-state"><span class="ic">◑</span>No payments recorded yet. Add one from a client\'s policy.</div>';
+    } else {
+      html += '<table><thead><tr><th>Date</th><th>Client</th><th>Insurer</th><th>Policy</th><th>Amount</th><th>Method</th></tr></thead><tbody>';
+      rows.forEach(function(pay){
+        var pol = state.policies.find(function(p){return p.id===pay.policyId;});
+        var c = pol ? clientOf(pol.clientId) : null;
+        var comp = pol ? companyOf(pol.company) : {name:'—'};
+        html += '<tr class="clickable" data-open-client="'+(pol?pol.clientId:'')+'">' +
+          '<td class="row-primary" data-label="Date"><strong>'+fmtDate(pay.date)+'</strong></td>' +
+          '<td data-label="Client">'+esc(c?c.name:'—')+'</td>' +
+          '<td data-label="Insurer">'+esc(comp.name)+'</td>' +
+          '<td data-label="Policy">'+esc(pol?pol.policyNumber:'—')+'</td>' +
+          '<td data-label="Amount"><strong>'+fmtKES(pay.amount)+'</strong></td>' +
+          '<td data-label="Method">'+esc(pay.method||'—')+'</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function renderStatements(){
+    var html = pageHead('Statements', 'Generate a full statement for one client, ready to print or save as PDF.', '');
+    html += '<div class="field statement-client-select"><label>Client</label><select id="statement-client">' +
+      '<option value="">Select a client…</option>' +
+      state.clients.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');}).map(function(c){
+        return '<option value="'+c.id+'"'+(state.statementClientId===c.id?' selected':'')+'>'+esc(c.name)+'</option>';
+      }).join('') +
+    '</select></div>';
+
+    if (state.statementClientId) {
+      var c = clientOf(state.statementClientId);
+      if (c) {
+        html += '<div style="margin-bottom:14px;"><button class="btn btn-primary no-print" id="print-statement-btn">🖨 Print / Save as PDF</button></div>';
+        html += buildStatementHtml(c);
+      }
+    } else {
+      html += '<div class="panel"><div class="empty-state"><span class="ic">▦</span>Choose a client above to view their statement.</div></div>';
+    }
+    document.getElementById('main').innerHTML = html;
+  }
+
+  function buildStatementHtml(c){
+    var pols = policiesForClient(c.id);
+    var totalPremium = pols.reduce(function(s,p){return s+(Number(p.premium)||0);},0);
+    var totalPaid = pols.reduce(function(s,p){return s+paidTotal(p.id);},0);
+    var totalBal = pols.reduce(function(s,p){return s+balanceOf(p);},0);
+
+    var html = '<div class="panel"><div class="panel-body pad" id="statement-content">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;">' +
+      '<div><h2 style="font-size:19px;">'+esc(c.name)+'</h2><div class="page-sub">'+esc(c.phone||'')+(c.email?' · '+esc(c.email):'')+(c.idNumber?' · ID '+esc(c.idNumber):'')+'</div></div>' +
+      '<div class="page-sub">Statement date: '+fmtDate(todayStr())+'</div>' +
+    '</div>';
+
+    if (!pols.length) {
+      html += '<div class="empty-state">No policies on record for this client.</div>';
+    } else {
+      pols.forEach(function(p){
+        var comp = companyOf(p.company);
+        var pays = paymentsForPolicy(p.id).sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+        html += '<div style="border:1px solid var(--border); border-radius:10px; margin-bottom:14px; overflow:hidden;">';
+        html += '<div style="padding:12px 16px; background:var(--surface-2); display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">' +
+          '<div><strong>'+esc(comp.name)+'</strong> · '+esc(p.coverType||'')+' <span class="muted">(Policy '+esc(p.policyNumber||'—')+')</span></div>' +
+          '<div class="muted">'+fmtDate(p.startDate)+' → '+fmtDate(p.expiryDate)+'</div>' +
+        '</div>';
+        html += '<div style="padding:12px 16px; display:flex; gap:24px; flex-wrap:wrap;">' +
+          '<div class="fig"><div class="k">PREMIUM</div><div class="v">'+fmtKES(p.premium)+'</div></div>' +
+          '<div class="fig"><div class="k">PAID</div><div class="v">'+fmtKES(paidTotal(p.id))+'</div></div>' +
+          '<div class="fig"><div class="k">BALANCE</div><div class="v" style="color:'+(balanceOf(p)>0?'var(--gold)':'var(--safe)')+'">'+fmtKES(balanceOf(p))+'</div></div>' +
+        '</div>';
+        if (pays.length) {
+          html += '<table style="margin:0;"><thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead><tbody>' +
+            pays.map(function(pay){ return '<tr><td data-label="Date">'+fmtDate(pay.date)+'</td><td data-label="Amount">'+fmtKES(pay.amount)+'</td><td data-label="Method">'+esc(pay.method||'—')+'</td></tr>'; }).join('') +
+          '</tbody></table>';
+        }
+        html += '</div>';
+      });
+
+      html += '<div style="display:flex; justify-content:flex-end; gap:28px; margin-top:8px; padding-top:14px; border-top:2px solid var(--border);">' +
+        '<div class="fig"><div class="k">TOTAL PREMIUM</div><div class="v">'+fmtKES(totalPremium)+'</div></div>' +
+        '<div class="fig"><div class="k">TOTAL PAID</div><div class="v">'+fmtKES(totalPaid)+'</div></div>' +
+        '<div class="fig"><div class="k">TOTAL BALANCE</div><div class="v" style="color:'+(totalBal>0?'var(--gold)':'var(--safe)')+'">'+fmtKES(totalBal)+'</div></div>' +
+      '</div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  /* ================= MODALS ================= */
+  function openModal(html){
+    document.getElementById('modal-root').innerHTML = '<div class="modal-overlay" id="modal-overlay">' + html + '</div>';
+    document.getElementById('modal-overlay').addEventListener('mousedown', function(e){
+      if (e.target.id === 'modal-overlay') closeModal();
+    });
+  }
+  function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
+
+  function clientFormModal(existing){
+    var c = existing || {name:'',phone:'',email:'',idNumber:'',address:''};
+    var html = '<div class="modal">' +
+      '<div class="modal-head"><h3>'+(existing?'Edit client':'Add client')+'</h3><button class="close-x" data-close>✕</button></div>' +
+      '<div class="modal-body">' +
+        field('name','Full name *','text', c.name, 'e.g. Jane Wanjiru') +
+        rowFields([field('phone','Phone number','tel', c.phone, '07xx xxx xxx'), field('email','Email','email', c.email, 'optional')]) +
+        rowFields([field('idNumber','ID / Passport No.','text', c.idNumber, ''), field('address','Address','text', c.address, 'town / estate')]) +
+      '</div>' +
+      '<div class="modal-foot"><button class="btn" data-close>Cancel</button>' +
+        (existing? '<button class="btn btn-danger" id="delete-client-btn">Delete client</button>':'') +
+        '<button class="btn btn-primary" id="save-client-btn">'+(existing?'Save changes':'Add client')+'</button>' +
+      '</div></div>';
+    openModal(html);
+    bindModalClose();
+    document.getElementById('save-client-btn').onclick = async function(){
+      var name = document.getElementById('f-name').value.trim();
+      if (!name) { showToast('Name is required'); return; }
+      var data = {
+        name: name,
+        phone: document.getElementById('f-phone').value.trim(),
+        email: document.getElementById('f-email').value.trim(),
+        idNumber: document.getElementById('f-idNumber').value.trim(),
+        address: document.getElementById('f-address').value.trim()
+      };
+      if (existing) { await dbUpdate('clients', existing.id, data); showToast('Client updated'); }
+      else { var id = await dbAdd('clients', data); showToast('Client added'); if(id){ closeModal(); state.view='clientDetail'; state.activeClientId=id; render(); return; } }
+      closeModal();
+    };
+    if (existing) {
+      document.getElementById('delete-client-btn').onclick = async function(){
+        if (!confirm('Delete '+existing.name+' and all their policies & payments? This cannot be undone.')) return;
+        var pols = policiesForClient(existing.id);
+        for (var i=0;i<pols.length;i++){
+          var pays = paymentsForPolicy(pols[i].id);
+          for (var j=0;j<pays.length;j++){ await dbDelete('payments', pays[j].id); }
+          await dbDelete('policies', pols[i].id);
+        }
+        await dbDelete('clients', existing.id);
+        showToast('Client deleted');
+        closeModal();
+        state.view = 'clients';
+        render();
+      };
+    }
+  }
+
+  function policyFormModal(existing, presetClientId){
+    var p = existing || { clientId: presetClientId||'', company: COMPANIES[0].id, coverType: COVER_TYPES[0], policyNumber:'', startDate: todayStr(), expiryDate:'', premium:'', paymentFrequency: FREQUENCIES[0], notes:'' };
+    var clientOptions = state.clients.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');})
+      .map(function(c){ return '<option value="'+c.id+'"'+(p.clientId===c.id?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('');
+    var companyOptions = COMPANIES.map(function(c){ return '<option value="'+c.id+'"'+(p.company===c.id?' selected':'')+'>'+esc(c.name)+'</option>'; }).join('');
+    var coverOptions = COVER_TYPES.map(function(t){ return '<option value="'+t+'"'+(p.coverType===t?' selected':'')+'>'+t+'</option>'; }).join('');
+    var freqOptions = FREQUENCIES.map(function(t){ return '<option value="'+t+'"'+(p.paymentFrequency===t?' selected':'')+'>'+t+'</option>'; }).join('');
+
+    var html = '<div class="modal wide">' +
+      '<div class="modal-head"><h3>'+(existing?'Edit policy':'Add policy')+'</h3><button class="close-x" data-close>✕</button></div>' +
+      '<div class="modal-body">' +
+        '<div class="field"><label>Client *</label><select id="f-clientId">'+ (state.clients.length? clientOptions : '<option value="">Add a client first</option>') +'</select></div>' +
+        rowFields([selectField('company','Insurance company *', companyOptions), selectField('coverType','Type of cover *', coverOptions)]) +
+        rowFields([field('policyNumber','Policy number', 'text', p.policyNumber, ''), selectField('paymentFrequency','Payment frequency', freqOptions)]) +
+        rowFields([field('startDate','Start date','date', p.startDate,''), field('expiryDate','Expiry date *','date', p.expiryDate,'')]) +
+        field('premium','Total premium (KSh) *','number', p.premium, '0') +
+        '<div class="field"><label>Notes</label><textarea id="f-notes" placeholder="optional">'+esc(p.notes||'')+'</textarea></div>' +
+      '</div>' +
+      '<div class="modal-foot"><button class="btn" data-close>Cancel</button>' +
+        '<button class="btn btn-primary" id="save-policy-btn">'+(existing?'Save changes':'Add policy')+'</button>' +
+      '</div></div>';
+    openModal(html);
+    bindModalClose();
+
+    document.getElementById('save-policy-btn').onclick = async function(){
+      var clientId = document.getElementById('f-clientId').value;
+      var expiryDate = document.getElementById('f-expiryDate').value;
+      var premium = document.getElementById('f-premium').value;
+      if (!clientId) { showToast('Please add/select a client'); return; }
+      if (!expiryDate) { showToast('Expiry date is required'); return; }
+      if (!premium) { showToast('Premium amount is required'); return; }
+      var data = {
+        clientId: clientId,
+        company: document.getElementById('f-company').value,
+        coverType: document.getElementById('f-coverType').value,
+        policyNumber: document.getElementById('f-policyNumber').value.trim(),
+        paymentFrequency: document.getElementById('f-paymentFrequency').value,
+        startDate: document.getElementById('f-startDate').value,
+        expiryDate: expiryDate,
+        premium: Number(premium),
+        notes: document.getElementById('f-notes').value.trim()
+      };
+      if (existing) { await dbUpdate('policies', existing.id, data); showToast('Policy updated'); }
+      else { await dbAdd('policies', data); showToast('Policy added'); }
+      closeModal();
+      state.view = 'clientDetail'; state.activeClientId = clientId;
+      render();
+    };
+  }
+
+  function paymentFormModal(policy){
+    var html = '<div class="modal">' +
+      '<div class="modal-head"><h3>Record payment</h3><button class="close-x" data-close>✕</button></div>' +
+      '<div class="modal-body">' +
+        '<div class="page-sub" style="margin-bottom:12px;">'+esc(companyOf(policy.company).name)+' · '+esc(policy.coverType)+' · Balance '+fmtKES(balanceOf(policy))+'</div>' +
+        rowFields([field('amount','Amount (KSh) *','number','', ''), field('date','Date *','date', todayStr(), '')]) +
+        '<div class="field"><label>Method</label><select id="f-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option><option>Cheque</option><option>Card</option></select></div>' +
+        '<div class="field"><label>Notes</label><textarea id="f-notes" placeholder="optional"></textarea></div>' +
+      '</div>' +
+      '<div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn btn-gold" id="save-payment-btn">Save payment</button></div>' +
+    '</div>';
+    openModal(html);
+    bindModalClose();
+    document.getElementById('save-payment-btn').onclick = async function(){
+      var amount = document.getElementById('f-amount').value;
+      var date = document.getElementById('f-date').value;
+      if (!amount || Number(amount)<=0) { showToast('Enter a valid amount'); return; }
+      if (!date) { showToast('Date is required'); return; }
+      await dbAdd('payments', {
+        policyId: policy.id,
+        amount: Number(amount),
+        date: date,
+        method: document.getElementById('f-method').value,
+        notes: document.getElementById('f-notes').value.trim()
+      });
+      showToast('Payment recorded');
+      closeModal();
+      render();
+    };
+  }
+
+  function field(id, label, type, value, placeholder){
+    return '<div class="field"><label>'+esc(label)+'</label><input id="f-'+id+'" type="'+type+'" value="'+esc(value)+'" placeholder="'+esc(placeholder||'')+'"></div>';
+  }
+  function selectField(id, label, optionsHtml){
+    return '<div class="field"><label>'+esc(label)+'</label><select id="f-'+id+'">'+optionsHtml+'</select></div>';
+  }
+  function rowFields(arr){ return '<div class="field-row">'+arr.join('')+'</div>'; }
+  function bindModalClose(){
+    Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function(el){ el.onclick = closeModal; });
+  }
+
+  /* ================= RENDER ROOT ================= */
+  function render(){
+    renderNav();
+    if (state.view === 'dashboard') renderDashboard();
+    else if (state.view === 'reminders') renderReminders();
+    else if (state.view === 'clients') renderClients();
+    else if (state.view === 'clientDetail') renderClientDetail(state.activeClientId);
+    else if (state.view === 'policies') renderPolicies();
+    else if (state.view === 'payments') renderPayments();
+    else if (state.view === 'statements') renderStatements();
+    bindPageEvents();
+  }
+
+  function bindPageEvents(){
+    // nav
+    Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function(el){
+      el.onclick = function(){ state.view = el.getAttribute('data-nav'); render(); window.scrollTo(0,0); };
+    });
+    // open client
+    Array.prototype.forEach.call(document.querySelectorAll('[data-open-client]'), function(el){
+      el.onclick = function(){
+        var id = el.getAttribute('data-open-client');
+        if (!id) return;
+        state.view = 'clientDetail'; state.activeClientId = id; render(); window.scrollTo(0,0);
+      };
+    });
+    // actions
+    var newClientBtn = document.querySelector('[data-action="new-client"]');
+    if (newClientBtn) newClientBtn.onclick = function(){ clientFormModal(null); };
+
+    var editClientBtn = document.querySelector('[data-action="edit-client"]');
+    if (editClientBtn) editClientBtn.onclick = function(){ clientFormModal(clientOf(editClientBtn.getAttribute('data-id'))); };
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="new-policy"]'), function(el){
+      el.onclick = function(){ policyFormModal(null, el.getAttribute('data-client') || state.activeClientId); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="edit-policy"]'), function(el){
+      el.onclick = function(){ var p = state.policies.find(function(x){return x.id===el.getAttribute('data-id');}); policyFormModal(p); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="delete-policy"]'), function(el){
+      el.onclick = async function(){
+        if (!confirm('Delete this policy and its payment history?')) return;
+        var id = el.getAttribute('data-id');
+        var pays = paymentsForPolicy(id);
+        for (var i=0;i<pays.length;i++){ await dbDelete('payments', pays[i].id); }
+        await dbDelete('policies', id);
+        showToast('Policy deleted');
+        render();
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="new-payment"]'), function(el){
+      el.onclick = function(){ var p = state.policies.find(function(x){return x.id===el.getAttribute('data-policy');}); if(p) paymentFormModal(p); };
+    });
+
+    // search / filters
+    var cs = document.getElementById('client-search');
+    if (cs) { cs.oninput = function(){ state.clientSearch = cs.value; renderClients(); bindPageEvents(); }; setTimeout(function(){cs.focus(); cs.selectionStart=cs.selectionEnd=cs.value.length;},0); }
+
+    var ps = document.getElementById('policy-search');
+    if (ps) { ps.oninput = function(){ state.policySearch = ps.value; renderPolicies(); bindPageEvents(); }; }
+
+    var pfc = document.getElementById('policy-filter-company');
+    if (pfc) pfc.onchange = function(){ state.policyFilterCompany = pfc.value; renderPolicies(); bindPageEvents(); };
+
+    var pfs = document.getElementById('policy-filter-status');
+    if (pfs) pfs.onchange = function(){ state.policyFilterStatus = pfs.value; renderPolicies(); bindPageEvents(); };
+
+    var stc = document.getElementById('statement-client');
+    if (stc) stc.onchange = function(){ state.statementClientId = stc.value; renderStatements(); bindPageEvents(); };
+
+    var printBtn = document.getElementById('print-statement-btn');
+    if (printBtn) printBtn.onclick = function(){
+      var content = document.getElementById('statement-content');
+      if (content) {
+        document.getElementById('print-area').innerHTML = '<h1 style="font-family:Fraunces,serif;">Client Statement</h1>' + content.innerHTML;
+        window.print();
+      }
+    };
+  }
+
+  /* ================= INIT ================= */
+  document.addEventListener('DOMContentLoaded', function(){
+    initDb();
+
+    var fileInput = document.getElementById('import-file');
+    function triggerImport(){ fileInput.click(); }
+    fileInput.onchange = function(){
+      if (fileInput.files && fileInput.files[0]) importData(fileInput.files[0]);
+      fileInput.value = '';
+    };
+    ['export-btn','export-btn-mobile'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.onclick = exportData;
+    });
+    ['import-btn','import-btn-mobile'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.onclick = triggerImport;
+    });
+  });
+})();
+</script>
+</body>
+</html>
